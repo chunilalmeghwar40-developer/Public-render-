@@ -1,0 +1,9 @@
+version: '3.8'
+services:
+  playit:
+    image: alpine:latest
+    container_name: playit-tunnel
+    ports:
+      - "8080:80"
+    command: sh -c "apk add --no-cache curl lighttpd bash && curl -L https://github.com/playit-cloud/playit-agent/releases/download/v0.15.26/playit-linux-amd64 -o /usr/local/bin/playit && chmod +x /usr/local/bin/playit && mkdir -p /var/www/localhost/htdocs && echo '<h1>Playit Tunnel Active</h1><div id=\"link\">Loading...</div><script>setInterval(async()=>{let r=await fetch(\"/api/link\");let d=await r.json();if(d.link)document.getElementById(\"link\").innerHTML=\"<a href=\"+d.link+\">\"+d.link+\"</a>\";},3000);</script>' > /var/www/localhost/htdocs/index.html && lighttpd -D -f /etc/lighttpd/lighttpd.conf & sleep 2 && /usr/local/bin/playit"
+    restart: unless-stopped
