@@ -1,17 +1,19 @@
-# Lightweight base image
 FROM alpine:latest
 
-# Install dependencies: curl (to download script) and libgcc (required for static binary)
-RUN apk add --no-cache curl libgcc
+# Install required dependencies: curl, ca-certificates, and bash
+RUN apk add --no-cache curl ca-certificates bash
 
-# Install SSHX using the official script
-RUN curl -sSf https://sshx.io/get | sh -s -- -y
+# Download and install playit.gg
+RUN curl -SsL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor | tee /etc/apk/keys/playit.gpg >/dev/null && \
+    echo "https://playit-cloud.github.io/ppa/data ./" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache playit
 
-# Ensure sshx is in PATH (script usually installs to /usr/local/bin)
-ENV PATH="/root/.local/bin:${PATH}"
+# Create necessary directory for playit config
+RUN mkdir -p /root/.config/playit
 
-# Expose default ports (optional: 8080 for web, 8051 for gRPC)
-EXPOSE 8080 8051
+# Expose default ports (optional - depends on your service)
+EXPOSE 25565 19132 8080
 
-# Run SSHX when container starts
-CMD ["sshx"]
+# Run playit.gg
+CMD ["playit"]
