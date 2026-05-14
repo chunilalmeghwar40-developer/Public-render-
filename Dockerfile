@@ -1,16 +1,14 @@
 FROM alpine:latest
 
-# Install required dependencies including gnupg (for gpg command)
-RUN apk add --no-cache curl ca-certificates bash gnupg
+# Install curl and ca-certificates only
+RUN apk add --no-cache curl ca-certificates
 
-# Download and install playit.gg
-RUN curl -SsL https://playit-cloud.github.io/ppa/key.gpg | gpg --dearmor | tee /etc/apk/keys/playit.gpg >/dev/null && \
-    echo "https://playit-cloud.github.io/ppa/data ./" >> /etc/apk/repositories && \
-    apk update && \
-    apk add --no-cache playit
+# Download playit binary directly for Linux (x86_64)
+RUN curl -L https://github.com/playit-cloud/playit-agent/releases/download/v0.15.26/playit-linux-amd64 -o /usr/local/bin/playit && \
+    chmod +x /usr/local/bin/playit
 
-# Create necessary directory for playit config
+# Create config directory
 RUN mkdir -p /root/.config/playit
 
-# Run playit.gg
-CMD ["playit"]
+# Run playit
+CMD ["/usr/local/bin/playit"]
