@@ -3,7 +3,6 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV DISPLAY=:1
 
-# Install desktop + VNC + Java
 RUN apt update && apt install -y \
     xfce4 \
     xfce4-goodies \
@@ -15,26 +14,47 @@ RUN apt update && apt install -y \
     openjdk-8-jre \
     wget \
     curl \
-    unzip \
     nano \
-    firefox \
+    net-tools \
     && apt clean
 
-# Create user
 RUN useradd -m minecraft
+
 USER minecraft
 WORKDIR /home/minecraft
 
-# Create folders
-RUN mkdir -p ~/minecraft
+RUN mkdir -p /home/minecraft/minecraft
 
-# Download old Minecraft launcher
-RUN wget -O ~/minecraft/launcher.jar \
-https://launcher.mojang.com/download/Minecraft.jar
+RUN echo '#!/bin/bash
+export DISPLAY=:1
 
-# Create startup script
-RUN echo '#!/bin/bash\n\
-export DISPLAY=:1\n\
+Xvfb :1 -screen 0 1024x768x16 &
+sleep 3
+
+xfce4-session &
+sleep 5
+
+x11vnc -display :1 -forever -nopw -shared -rfbport 5900 &
+sleep 3
+
+websockify --web=/usr/share/novnc/ 6080 localhost:5900 &
+sleep 3
+
+cd /home/minecraft/minecraft
+
+# Agar launcher.jar ho to run karo
+if [ -f launcher.jar ]; then
+    java -jar launcher.jar &
+fi
+
+tail -f /dev/null
+' > /home/minecraft/start.sh
+
+RUN chmod +x /home/minecraft/start.sh
+
+EXPOSE 6080
+
+CMD ["/bin/bash","/home/minecraft/start.sh"]export DISPLAY=:1\n\
 Xvfb :1 -screen 0 1024x768x16 &\n\
 sleep 2\n\
 startxfce4 &\n\
