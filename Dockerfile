@@ -25,16 +25,34 @@ WORKDIR /home/minecraft
 
 RUN mkdir -p /home/minecraft/minecraft
 
-RUN echo '#!/bin/bash
-export DISPLAY=:1
+RUN printf '#!/bin/bash\n\
+export DISPLAY=:1\n\
+\n\
+Xvfb :1 -screen 0 1024x768x16 &\n\
+sleep 3\n\
+\n\
+xfce4-session &\n\
+sleep 5\n\
+\n\
+x11vnc -display :1 -forever -nopw -shared -rfbport 5900 &\n\
+sleep 3\n\
+\n\
+websockify --web=/usr/share/novnc/ 6080 localhost:5900 &\n\
+sleep 3\n\
+\n\
+cd /home/minecraft/minecraft\n\
+\n\
+if [ -f launcher.jar ]; then\n\
+    java -jar launcher.jar &\n\
+fi\n\
+\n\
+tail -f /dev/null\n' > /home/minecraft/start.sh
 
-Xvfb :1 -screen 0 1024x768x16 &
-sleep 3
+RUN chmod +x /home/minecraft/start.sh
 
-xfce4-session &
-sleep 5
+EXPOSE 6080
 
-x11vnc -display :1 -forever -nopw -shared -rfbport 5900 &
+CMD ["/bin/bash", "/home/minecraft/start.sh"]x11vnc -display :1 -forever -nopw -shared -rfbport 5900 &
 sleep 3
 
 websockify --web=/usr/share/novnc/ 6080 localhost:5900 &
